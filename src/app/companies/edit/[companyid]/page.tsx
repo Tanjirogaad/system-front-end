@@ -1,0 +1,289 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
+import Loading from "@/app/components/Loading";
+import Navbar from "@/app/components/Navbar";
+import { FaArrowRight, FaSave } from "react-icons/fa";
+
+type CompanyFormData = {
+  Name: string;
+  NameEN: string;
+  Customercode: string;
+  TaxRegistration: string;
+  isActive: boolean;
+  GPS: {
+    Address: string;
+    mapLink: string;
+  };
+};
+
+export default function EditCompanyPage() {
+  const { companyid } = useParams();
+  const router = useRouter();
+  const [formData, setFormData] = useState<CompanyFormData>({
+    Name: "",
+    NameEN: "",
+    Customercode: "",
+    TaxRegistration: "",
+    isActive: false,
+    GPS: {
+      Address: "",
+      mapLink: "",
+    },
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // جلب بيانات الشركة الحالية
+  useEffect(() => {
+    if (!companyid) return;
+
+    const fetchCompany = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API}/api/companies/get-company/${companyid}`,
+        );
+        const company = res.data.company;
+        setFormData({
+          Name: company.Name || "",
+          NameEN: company.NameEN || "",
+          Customercode: company.Customercode || "",
+          TaxRegistration: company.TaxRegistration || "",
+          isActive: company.isActive || false,
+          GPS: {
+            Address: company.GPS?.Address || "",
+            mapLink: company.GPS?.mapLink || "",
+          },
+        });
+        setError(null);
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          setError(
+            err.response?.data?.message || "حدث خطأ في جلب بيانات الشركة",
+          );
+        } else {
+          setError("حدث خطأ غير معروف");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompany();
+  }, [companyid]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    if (name.startsWith("GPS.")) {
+      // التعامل مع الحقول المتداخلة
+      const gpsField = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        GPS: {
+          ...prev.GPS,
+          [gpsField]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API}/api/companies/edit-company/${companyid}`,
+        formData,
+      );
+      setSuccess("تم تحديث البيانات بنجاح");
+      setTimeout(() => {
+        router.push(`/companies/${companyid}`);
+      }, 2000);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || "حدث خطأ أثناء التحديث");
+      } else {
+        setError("حدث خطأ غير معروف");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const goBack = () => {
+    router.push(`/companies/${companyid}`);
+  };
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={goBack}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 transition-colors"
+          >
+            <FaArrowRight />
+            <span>العودة إلى تفاصيل الشركة</span>
+          </button>
+
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="bg-linear-to-r from-blue-600 to-blue-500 p-6 text-white">
+              <h1 className="text-2xl font-bold">تعديل بيانات الشركة</h1>
+              <p className="text-blue-100 mt-1">قم بتحديث المعلومات أدناه</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                  {success}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  اسم الشركة (عربي) *
+                </label>
+                <input
+                  type="text"
+                  name="Name"
+                  value={formData.Name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  اسم الشركة (إنجليزي) *
+                </label>
+                <input
+                  type="text"
+                  name="NameEN"
+                  value={formData.NameEN}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  كود العميل *
+                </label>
+                <input
+                  type="text"
+                  name="Customercode"
+                  value={formData.Customercode}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  التسجيل الضريبي *
+                </label>
+                <input
+                  type="text"
+                  name="TaxRegistration"
+                  value={formData.TaxRegistration}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="isActive"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  الشركة نشطة
+                </label>
+              </div>
+
+              {/* حقول GPS */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  الموقع الجغرافي
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      العنوان
+                    </label>
+                    <input
+                      type="text"
+                      name="GPS.Address"
+                      value={formData.GPS.Address}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="مثال: شارع النيل، القاهرة"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      رابط الخريطة
+                    </label>
+                    <input
+                      type="url"
+                      name="GPS.mapLink"
+                      value={formData.GPS.mapLink}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaSave />
+                  {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
