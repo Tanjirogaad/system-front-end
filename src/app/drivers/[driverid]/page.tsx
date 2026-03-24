@@ -168,7 +168,7 @@ export default function DriverDetailsPage() {
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <div className="flex items-center gap-3 text-gray-600 mb-2">
                     <FaBarcode className="w-5 h-5" />
-                    <span className="text-sm font-medium">كود العميل</span>
+                    <span className="text-sm font-medium">كود المورد</span>
                   </div>
                   <p className="text-lg font-semibold text-gray-900">
                     {driver.Customercode}

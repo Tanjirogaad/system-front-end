@@ -66,25 +66,25 @@ export default function Navbar() {
             <span className="hidden sm:inline">الملف الشخصي</span>
           </Link>
           <Link
-            href="/rules"
+            href="/employees"
             className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
-            <FaBookReader aria-hidden />
-            <span className="hidden sm:inline">سياسة الشركة</span>
+            <FaUsers aria-hidden />
+            <span className="hidden sm:inline">الموظفين</span>
           </Link>
           <Link
             href="/drivers"
             className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
             <FaCarSide aria-hidden />
-            <span className="hidden sm:inline">السائقين</span>
+            <span className="hidden sm:inline">الموردين</span>
           </Link>
           <Link
             href="/companies"
             className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
             <FaBuilding aria-hidden />
-            <span className="hidden sm:inline">الشركات</span>
+            <span className="hidden sm:inline">العملاء</span>
           </Link>
           <Link
             href="/companies/registerdays"
@@ -94,11 +94,18 @@ export default function Navbar() {
             <span className="hidden sm:inline">ايام التسجيل</span>
           </Link>
           <Link
-            href="/employees"
+            href="/drivers/report"
             className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
-            <FaUsers aria-hidden />
-            <span className="hidden sm:inline">الموظفين</span>
+            <FaCarSide aria-hidden />
+            <span className="hidden sm:inline">تقرير المورد</span>
+          </Link>
+          <Link
+            href="/companies/report"
+            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+          >
+            <FaBuilding aria-hidden />
+            <span className="hidden sm:inline">تقرير العميل</span>
           </Link>
         </div>
 

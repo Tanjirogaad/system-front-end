@@ -16,6 +16,9 @@ interface LineReport {
   lineName: string;
   totalShifts: number;
   workingDays: number;
+  totalExtra: number;
+  totalDeduction: number;
+  totalOvertime: number;
 }
 
 export default function CompanyReportPage() {
@@ -31,13 +34,10 @@ export default function CompanyReportPage() {
   );
   const [report, setReport] = useState<LineReport[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // prices keyed by rowKey (lineId-index) to guarantee uniqueness
   const [prices, setPrices] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchCompanies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchCompanies = async () => {
@@ -68,11 +68,10 @@ export default function CompanyReportPage() {
       const rpt: LineReport[] = res.data.report || [];
       setReport(rpt);
 
-      // Initialize prices with unique keys per row: `${lineId}-${index}`
       const initialPrices: Record<string, string> = {};
       rpt.forEach((r, idx) => {
         const rowKey = `${r.lineId}-${idx}`;
-        initialPrices[rowKey] = ""; // empty string means no price entered yet
+        initialPrices[rowKey] = "";
       });
       setPrices(initialPrices);
     } catch (error) {
@@ -90,12 +89,9 @@ export default function CompanyReportPage() {
   );
 
   const handlePriceChange = (rowKey: string, value: string) => {
-    // Allow only digits and one decimal point
     let cleaned = value.replace(/[^0-9.]/g, "");
-    // keep only first dot if user types multiple
     const firstDotIndex = cleaned.indexOf(".");
     if (firstDotIndex !== -1) {
-      // keep only first dot
       cleaned =
         cleaned.slice(0, firstDotIndex + 1) +
         cleaned.slice(firstDotIndex + 1).replace(/\./g, "");
@@ -106,20 +102,29 @@ export default function CompanyReportPage() {
     }));
   };
 
-  // helper to get numeric price from stored string
   const getPriceNumber = (rowKey: string) => {
     const s = prices[rowKey] ?? "";
     const n = parseFloat(s);
     return Number.isNaN(n) ? 0 : n;
   };
 
-  // compute grand total
+  // حساب الإجمالي لكل صف مع تضمين الإضافات والسهر وخصم الخصومات فقط
+  const computeRowTotal = (item: LineReport, price: number) => {
+    return (
+      item.totalShifts * price +
+      item.totalExtra +
+      item.totalOvertime -
+      item.totalDeduction
+    );
+  };
+
+  // الإجمالي الكلي
   const grandTotal = report.reduce((acc, item, idx) => {
     const rowKey = `${item.lineId}-${idx}`;
     const price = getPriceNumber(rowKey);
-    return acc + item.totalShifts * price;
+    return acc + computeRowTotal(item, price);
   }, 0);
-
+  if (loading) return <Loading />;
   return (
     <>
       <Navbar />
@@ -187,20 +192,17 @@ export default function CompanyReportPage() {
               <div className="flex items-end">
                 <button
                   onClick={fetchReport}
-                  disabled={!selectedCompanyId || loading}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
                 >
-                  {loading ? "جاري التحميل..." : "عرض التقرير"}
+                  عرض التقرير
                 </button>
               </div>
             </div>
           </div>
 
-          {loading ? (
-            <Loading />
-          ) : (
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <table className="w-full">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
@@ -213,7 +215,16 @@ export default function CompanyReportPage() {
                       عدد الورديات
                     </th>
                     <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
-                      عدد أيام العمل
+                      أيام العمل
+                    </th>
+                    <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
+                      إضافات
+                    </th>
+                    <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
+                      خصومات
+                    </th>
+                    <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
+                      سهر
                     </th>
                     <th className="py-3 px-4 text-right text-sm font-semibold text-gray-700">
                       سعر الورديه
@@ -229,7 +240,7 @@ export default function CompanyReportPage() {
                       const rowKey = `${item.lineId}-${index}`;
                       const priceStr = prices[rowKey] ?? "";
                       const priceNum = getPriceNumber(rowKey);
-                      const totalForLine = item.totalShifts * priceNum;
+                      const totalForLine = computeRowTotal(item, priceNum);
 
                       return (
                         <tr key={rowKey} className="hover:bg-gray-50">
@@ -247,10 +258,18 @@ export default function CompanyReportPage() {
                           <td className="py-3 px-4 text-gray-600">
                             {item.workingDays}
                           </td>
-
-                          <td className="py-3 px-4 text-gray-600">
+                          <td className="py-3 px-4 text-green-600 font-medium">
+                            {item.totalExtra.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-red-600 font-medium">
+                            {item.totalDeduction.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-purple-600 font-medium">
+                            {item.totalOvertime.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4">
                             <input
-                              className="w-1/2 px-3 py-2 border rounded-lg"
+                              className="w-24 px-3 py-2 border rounded-lg text-left"
                               value={priceStr}
                               onChange={(e) =>
                                 handlePriceChange(rowKey, e.target.value)
@@ -262,7 +281,6 @@ export default function CompanyReportPage() {
                               style={{ MozAppearance: "textfield" }}
                             />
                           </td>
-
                           <td className="py-3 px-4 text-gray-600">
                             {totalForLine.toLocaleString()}
                           </td>
@@ -272,7 +290,7 @@ export default function CompanyReportPage() {
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={9}
                         className="py-8 text-center text-gray-500"
                       >
                         لا توجد بيانات للعرض
@@ -281,18 +299,17 @@ export default function CompanyReportPage() {
                   )}
                 </tbody>
               </table>
+            </div>
 
-              {/* Grand total */}
-              <div className="p-4 border-t flex justify-end gap-4">
-                <div className="text-right">
-                  <div className="text-sm text-gray-500">الإجمالي الكلي</div>
-                  <div className="text-2xl font-bold">
-                    {grandTotal.toLocaleString()}
-                  </div>
+            <div className="p-4 border-t flex justify-end gap-4">
+              <div className="text-right">
+                <div className="text-sm text-gray-500">الإجمالي الكلي</div>
+                <div className="text-2xl font-bold">
+                  {grandTotal.toLocaleString()}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>

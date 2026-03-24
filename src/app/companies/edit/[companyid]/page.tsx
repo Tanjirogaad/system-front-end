@@ -5,8 +5,22 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import Loading from "@/app/components/Loading";
 import Navbar from "@/app/components/Navbar";
-import { FaArrowRight, FaSave } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaSave,
+  FaPlus,
+  FaTrash,
+  FaUserPlus,
+} from "react-icons/fa";
 
+// تعريف نوع بيانات الموظف
+type Employee = {
+  role: string;
+  name: string;
+  number: string[];
+};
+
+// تعريف نوع بيانات الشركة
 type CompanyFormData = {
   Name: string;
   NameEN: string;
@@ -17,6 +31,7 @@ type CompanyFormData = {
     Address: string;
     mapLink: string;
   };
+  employees: Employee[];
 };
 
 export default function EditCompanyPage() {
@@ -32,6 +47,7 @@ export default function EditCompanyPage() {
       Address: "",
       mapLink: "",
     },
+    employees: [],
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,6 +75,7 @@ export default function EditCompanyPage() {
             Address: company.GPS?.Address || "",
             mapLink: company.GPS?.mapLink || "",
           },
+          employees: company.employees || [], // تأكد من أن API يعيد employees كمصفوفة
         });
         setError(null);
       } catch (err: unknown) {
@@ -77,10 +94,77 @@ export default function EditCompanyPage() {
     fetchCompany();
   }, [companyid]);
 
+  // دوال إدارة الموظفين
+  const addEmployee = () => {
+    setFormData((prev) => ({
+      ...prev,
+      employees: [
+        ...prev.employees,
+        { role: "", name: "", number: [] }, // موظف جديد فارغ
+      ],
+    }));
+  };
+
+  const removeEmployee = (empIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      employees: prev.employees.filter((_, i) => i !== empIndex),
+    }));
+  };
+
+  const handleEmployeeChange = (
+    empIndex: number,
+    field: keyof Omit<Employee, "number">,
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      const updated = [...prev.employees];
+      updated[empIndex] = { ...updated[empIndex], [field]: value };
+      return { ...prev, employees: updated };
+    });
+  };
+
+  // دوال إدارة أرقام الهواتف لكل موظف
+  const addPhoneNumber = (empIndex: number) => {
+    setFormData((prev) => {
+      const updated = [...prev.employees];
+      updated[empIndex] = {
+        ...updated[empIndex],
+        number: [...updated[empIndex].number, ""],
+      };
+      return { ...prev, employees: updated };
+    });
+  };
+
+  const removePhoneNumber = (empIndex: number, phoneIndex: number) => {
+    setFormData((prev) => {
+      const updated = [...prev.employees];
+      updated[empIndex] = {
+        ...updated[empIndex],
+        number: updated[empIndex].number.filter((_, i) => i !== phoneIndex),
+      };
+      return { ...prev, employees: updated };
+    });
+  };
+
+  const handlePhoneChange = (
+    empIndex: number,
+    phoneIndex: number,
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      const updated = [...prev.employees];
+      const newNumbers = [...updated[empIndex].number];
+      newNumbers[phoneIndex] = value;
+      updated[empIndex] = { ...updated[empIndex], number: newNumbers };
+      return { ...prev, employees: updated };
+    });
+  };
+
+  // التعامل مع التغييرات في الحقول الأساسية والـ GPS
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith("GPS.")) {
-      // التعامل مع الحقول المتداخلة
       const gpsField = name.split(".")[1];
       setFormData((prev) => ({
         ...prev,
@@ -162,6 +246,7 @@ export default function EditCompanyPage() {
                 </div>
               )}
 
+              {/* الحقول الأساسية */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   اسم الشركة (عربي) *
@@ -235,7 +320,7 @@ export default function EditCompanyPage() {
                 </label>
               </div>
 
-              {/* حقول GPS */}
+              {/* قسم الموقع الجغرافي */}
               <div className="border-t pt-4 mt-2">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">
                   الموقع الجغرافي
@@ -268,6 +353,116 @@ export default function EditCompanyPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* قسم الموظفين */}
+              <div className="border-t pt-4 mt-2">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    قائمة الموظفين
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addEmployee}
+                    className="flex items-center gap-2 text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <FaUserPlus />
+                    <span>إضافة موظف</span>
+                  </button>
+                </div>
+
+                {formData.employees.length === 0 && (
+                  <p className="text-gray-500 text-sm py-2">
+                    لا يوجد موظفين مضافين. اضغط إضافة موظف لإضافة موظف جديد.
+                  </p>
+                )}
+
+                {formData.employees.map((employee, empIdx) => (
+                  <div
+                    key={empIdx}
+                    className="border border-gray-200 rounded-lg p-4 mb-4 relative bg-gray-50"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => removeEmployee(empIdx)}
+                      className="absolute text-lg top-[-10] right-[-15] text-red-500 hover:text-red-700"
+                      aria-label="حذف الموظف"
+                    >
+                      <FaTrash /> 
+                    </button>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          الدور الوظيفي
+                        </label>
+                        <input
+                          type="text"
+                          value={employee.role}
+                          onChange={(e) =>
+                            handleEmployeeChange(empIdx, "role", e.target.value)
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="مثال: مدير مبيعات"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          اسم الموظف
+                        </label>
+                        <input
+                          type="text"
+                          value={employee.name}
+                          onChange={(e) =>
+                            handleEmployeeChange(empIdx, "name", e.target.value)
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="مثال: أحمد محمد"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          أرقام الهواتف
+                        </label>
+                        {employee.number.map((phone, phoneIdx) => (
+                          <div key={phoneIdx} className="flex gap-2 mb-2">
+                            <input
+                              type="tel"
+                              value={phone}
+                              onChange={(e) =>
+                                handlePhoneChange(
+                                  empIdx,
+                                  phoneIdx,
+                                  e.target.value,
+                                )
+                              }
+                              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder={`رقم الهاتف ${phoneIdx + 1}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removePhoneNumber(empIdx, phoneIdx)
+                              }
+                              className="p-2 text-red-600 hover:text-red-800 transition-colors"
+                              aria-label="حذف الرقم"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addPhoneNumber(empIdx)}
+                          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 mt-2"
+                        >
+                          <FaPlus />
+                          <span>إضافة رقم هاتف</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="pt-4">

@@ -13,7 +13,17 @@ import {
   FaEdit,
   FaMapMarkerAlt,
   FaLink,
+  FaUsers,
+  FaUser,
+  FaPhoneAlt,
 } from "react-icons/fa";
+
+// تعريف نوع بيانات الموظف
+type Employee = {
+  role: string;
+  name: string;
+  number: string[];
+};
 
 type CompanyDetails = {
   _id: string;
@@ -26,6 +36,7 @@ type CompanyDetails = {
     Address?: string;
     mapLink?: string;
   };
+  employees?: Employee[]; // مصفوفة الموظفين
 };
 
 export default function CompanyDetailsPage() {
@@ -227,6 +238,108 @@ export default function CompanyDetailsPage() {
                     </div>
                   )}
               </div>
+
+              {/* قسم الموظفين - تصميم محسن */}
+              {company.employees && company.employees.length > 0 && (
+                <div className="mt-8">
+                  <div className="flex items-center gap-2 mb-5">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <FaUsers className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      قائمة الموظفين
+                    </h2>
+                    <span className="bg-blue-100 text-blue-700 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                      {company.employees.length}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {company.employees.map((employee, idx) => (
+                      <div
+                        key={idx}
+                        className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+                      >
+                        {/* رأس البطاقة */}
+                        <div className="bg-linear-to-r from-blue-50 to-indigo-50 px-5 py-3 border-b border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="bg-blue-100 p-1.5 rounded-full">
+                                <FaUser className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <h3 className="font-semibold text-gray-800">
+                                الموظف {idx + 1}
+                              </h3>
+                            </div>
+                            {employee.role && (
+                              <span className="bg-blue-100 text-blue-700 text-sm font-medium px-2 py-1 rounded-full">
+                                {employee.role}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* محتوى البطاقة */}
+                        <div className="p-5 space-y-4">
+                          {/* اسم الموظف */}
+                          <div className="flex items-start gap-3">
+                            <div className="text-gray-400 mt-0.5">
+                              <FaUser className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-xs text-gray-500 mb-0.5">
+                                الاسم
+                              </div>
+                              <div className="text-gray-800 font-medium">
+                                {employee.name || "—"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* أرقام الهواتف */}
+                          {employee.number && employee.number.length > 0 && (
+                            <div className="flex items-start gap-3">
+                              <div className="text-gray-400 mt-0.5">
+                                <FaPhoneAlt className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-xs text-gray-500 mb-1">
+                                  أرقام الهواتف
+                                </div>
+                                <ul className="space-y-1">
+                                  {employee.number.map((phone, phoneIdx) => (
+                                    <li
+                                      key={phoneIdx}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                      <span
+                                        dir="ltr"
+                                        className="text-gray-700 text-sm"
+                                      >
+                                        {phone}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* في حال عدم وجود أي بيانات */}
+                          {!employee.name &&
+                            (!employee.number ||
+                              employee.number.length === 0) && (
+                              <div className="text-center text-gray-400 text-sm py-2">
+                                لا توجد بيانات إضافية
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-8 text-sm text-gray-500 border-t pt-6">
                 <p>• جميع البيانات معروضة كما هي في قاعدة البيانات</p>

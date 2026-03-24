@@ -36,7 +36,7 @@ export default function Drivers() {
       if (axios.isAxiosError(err)) {
         console.error("Failed to fetch drivers:", err);
         setError(
-          err.response?.data?.message || "حدث خطأ في جلب بيانات السائقين",
+          err.response?.data?.message || "حدث خطأ في جلب بيانات الموردين",
         );
       }
     } finally {
@@ -68,10 +68,10 @@ export default function Drivers() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <FaUser className="w-8 h-8 text-blue-600" />
-              إدارة السائقين
+              إدارة الموردين
             </h1>
             <p className="text-gray-600 mt-2">
-              قم بإدارة وتنظيم بيانات السائقين المسجلين في النظام
+              قم بإدارة وتنظيم بيانات الموردين المسجلين في النظام
             </p>
           </div>
 
@@ -82,17 +82,17 @@ export default function Drivers() {
             </div>
           )}
 
-          {/* بطاقة قائمة السائقين */}
+          {/* بطاقة قائمة الموردين */}
           <div className="bg-white rounded-xl shadow-sm border">
             <div className="p-6">
               {/* شريط البحث والإحصائيات */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
-                    قائمة السائقين
+                    قائمة الموردين
                   </h2>
                   <p className="text-gray-600 text-sm mt-1">
-                    إجمالي السائقين: {drivers.length}
+                    إجمالي الموردين: {drivers.length}
                   </p>
                 </div>
 
@@ -102,7 +102,7 @@ export default function Drivers() {
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="ابحث باسم السائق أو كود العميل..."
+                    placeholder="ابحث باسم المورد أو كود العميل..."
                     className="w-full md:w-80 py-3 pr-10 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -126,10 +126,10 @@ export default function Drivers() {
                           #
                         </th>
                         <th className="py-3 px-4 text-right text-sm font-semibold text-gray-900">
-                          اسم السائق (عربي)
+                          اسم المورد (عربي)
                         </th>
                         <th className="py-3 px-4 text-right text-sm font-semibold text-gray-900">
-                          اسم السائق (إنجليزي)
+                          اسم المورد (إنجليزي)
                         </th>
                         <th className="py-3 px-4 text-right text-sm font-semibold text-gray-900">
                           كود العميل

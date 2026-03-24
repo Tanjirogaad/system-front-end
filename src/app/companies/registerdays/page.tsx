@@ -210,7 +210,7 @@ function CompanyRegister({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [popup, setPopup] = useState<PopupData>(null);
-  
+
   // جلب خطوط الشركة
   useEffect(() => {
     if (!companyId) return;
@@ -1059,7 +1059,7 @@ export default function RegisterDays() {
                 className="mx-2 p-2 bg-blue-500 rounded text-white hover:bg-blue-500/90"
                 href="/companies/registerdays/driver-company"
               >
-                السائقين
+                الموردين
               </Link>
             </div>
           </div>
@@ -1127,8 +1127,8 @@ export default function RegisterDays() {
             {filteredCompanies.map((company) => (
               <details
                 key={company._id}
-                className={`bg-white rounded-xl shadow-sm border border-gray-200 open:shadow-lg transition-all ${
-                  !company.isActive ? "opacity-50 grayscale" : ""
+                className={`rounded-xl shadow-sm border border-gray-200 open:shadow-lg transition-all ${
+                  company.isActive ? "bg-white" : "bg-red-100 border-red-300 hover:bg-red-200"
                 }`}
               >
                 <summary className="flex items-center justify-between p-5 cursor-pointer list-none">
