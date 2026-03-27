@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   FaUser,
   FaPhone,
@@ -10,9 +11,10 @@ import {
 } from "react-icons/fa";
 
 interface Employee {
-  _id?: string; // أضفنا هذا
+  _id?: string;
   PersonalInformation?: {
     FullName?: string;
+    PersonalPhoto?: string; // إضافة هذا الحقل
   };
   JobInformation?: {
     EmployeeCode?: string;
@@ -46,6 +48,7 @@ export default function EmployeeGridCard({
   const hiringDateRaw = employee.JobInformation?.HiringDate;
   const status = employee.JobInformation?.EmploymentStatus || "غير محدد";
   const phones = employee.Address?.PhoneNumbers || [];
+  const personalPhoto = employee.PersonalInformation?.PersonalPhoto;
 
   const isActive = status.toLowerCase().includes("نشط");
 
@@ -112,6 +115,11 @@ export default function EmployeeGridCard({
 
   const normalizeTel = (p: string) => p.replace(/[^\d+]/g, "");
 
+  // رابط الصورة إذا وجدت
+  const photoUrl = personalPhoto
+    ? `${process.env.NEXT_PUBLIC_API}/${personalPhoto}`
+    : null;
+
   return (
     <div
       className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 hover:border-blue-200 overflow-hidden group h-full flex flex-col"
@@ -122,9 +130,21 @@ export default function EmployeeGridCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="relative">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                <FaUser className="text-white w-7 h-7 sm:w-8 sm:h-8" />
-              </div>
+              {photoUrl ? (
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
+                  <Image
+                    src={photoUrl}
+                    alt={name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                  <FaUser className="text-white w-7 h-7 sm:w-8 sm:h-8" />
+                </div>
+              )}
               <FaCircle
                 className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 border-2 border-white rounded-full ${
                   isActive ? "text-green-500" : "text-gray-400"

@@ -111,9 +111,23 @@ export default function CompanyRules() {
         <div className="text-center mt-10">
           <Link
             href={"/login"}
-            className="bg-linear-to-br from-blue-500 via-blue-300 to-blue-300 p-3 rounded-xl hover:bg-linear-right-br hover:from-blue-300 hover:to-blue-500"
+            className="inline-flex items-center gap-2 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
           >
-            تسجيل الدخول للنظام
+            <span>تسجيل الدخول للنظام</span>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+              />
+            </svg>
           </Link>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import axios from "axios";
 import Loading from "@/app/components/Loading";
 import Navbar from "@/app/components/Navbar";
@@ -30,9 +31,15 @@ import {
   FaPhoneAlt,
   FaAddressBook,
   FaRegClock,
+  FaShieldAlt,
+  FaEdit,
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFileAlt,
 } from "react-icons/fa";
 
-// تعريف واجهة الموظف (كما هي)
+// تعريف واجهة الموظف
 interface Employee {
   _id?: string;
   PersonalInformation?: {
@@ -66,6 +73,7 @@ interface Employee {
     EmploymentStatus?: string;
     DirectManagers?: string[];
     role?: string;
+    isInsured?: boolean;
   };
   WorkSchedule?: {
     StartTime?: string;
@@ -80,6 +88,7 @@ interface Employee {
     BankName?: string;
     BankAccountNumber?: string;
     Salary?: string;
+    Documents?: string[];
   };
   Contacts?: {
     Relationship?: string;
@@ -127,7 +136,7 @@ const InfoCard = ({
   </div>
 );
 
-// ICON type آمن (يتقبل props الـ SVG و size)
+// نوع الأيقونة
 type IconType = React.ComponentType<
   React.SVGProps<SVGSVGElement> & { size?: number }
 >;
@@ -144,7 +153,7 @@ const DataRow = ({
   value?: string | number | null;
   badge?: boolean;
 }) => {
-  if (value === undefined || value === null || value === "") return null; // لا تعرض إذا كانت القيمة فارغة
+  if (value === undefined || value === null || value === "") return null;
   return (
     <div className="flex items-start gap-3 group">
       <div className="text-blue-500 bg-blue-50 p-2 rounded-lg group-hover:bg-blue-100 transition-colors">
@@ -197,11 +206,107 @@ const DataList = ({
   );
 };
 
+// مكون عرض المستندات (يدعم الصور و PDF كمعاينة، والملفات الأخرى كأيقونات)
+const DocumentList = ({ documents }: { documents?: string[] }) => {
+  if (!documents || documents.length === 0) return null;
+
+  const isImage = (filePath: string) => {
+    const ext = filePath.split(".").pop()?.toLowerCase();
+    return ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(ext || "");
+  };
+
+  const isPdf = (filePath: string) => {
+    const ext = filePath.split(".").pop()?.toLowerCase();
+    return ext === "pdf";
+  };
+
+  const getFileIcon = (filePath: string) => {
+    const ext = filePath.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return <FaFilePdf className="text-red-500" size={20} />;
+    if (ext === "doc" || ext === "docx")
+      return <FaFileWord className="text-blue-500" size={20} />;
+    if (ext === "xls" || ext === "xlsx")
+      return <FaFileExcel className="text-green-500" size={20} />;
+    return <FaFileAlt className="text-gray-500" size={20} />;
+  };
+
+  return (
+    <div className="flex items-start gap-3">
+      <div className="text-blue-500 bg-blue-50 p-2 rounded-lg">
+        <FaFileInvoice size={16} />
+      </div>
+      <div className="flex-1">
+        <p className="text-xs text-gray-500 mb-1">المستندات</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {documents.map((doc, idx) => {
+            const fullUrl = `${process.env.NEXT_PUBLIC_API}/${doc}`;
+            if (isImage(doc)) {
+              return (
+                <a
+                  key={idx}
+                  href={fullUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <Image
+                    src={fullUrl}
+                    alt={`مستند ${idx + 1}`}
+                    width={200}
+                    height={96}
+                    className="w-full h-24 object-cover rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+                    unoptimized
+                  />
+                </a>
+              );
+            } else if (isPdf(doc)) {
+              return (
+                <div key={idx} className="relative">
+                  <iframe
+                    src={`${fullUrl}#toolbar=0&navpanes=0`}
+                    title={`PDF ${idx + 1}`}
+                    className="w-full h-24 rounded-lg border border-gray-200"
+                    style={{ pointerEvents: "none" }}
+                  />
+                  <a
+                    href={fullUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 flex items-center justify-center hover:bg-black/10 transition-colors rounded-lg"
+                  >
+                    <span className="bg-white/90 text-blue-600 px-2 py-1 rounded-full text-xs font-medium">
+                      فتح PDF
+                    </span>
+                  </a>
+                </div>
+              );
+            } else {
+              return (
+                <a
+                  key={idx}
+                  href={fullUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  {getFileIcon(doc)}
+                  <span className="text-sm text-gray-700 truncate">
+                    {doc.split("/").pop()}
+                  </span>
+                </a>
+              );
+            }
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function EmployeeDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
-  // تأكد من أن employeeId نصي واحد (next يمكن أن يرجع string[] أحيانًا)
   const rawId = (params as Record<string, string | string[] | undefined>)
     .employeeid;
   const employeeId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -210,7 +315,6 @@ export default function EmployeeDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // fetch داخل useEffect لتجنب تحذير الـ hooks عن التبعيات
   useEffect(() => {
     if (!employeeId) {
       setError("معرف الموظف غير متوفر");
@@ -225,12 +329,10 @@ export default function EmployeeDetailsPage() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("accessToken") ?? "";
-
         const response = await axios.get<{ employee: Employee }>(
           `${process.env.NEXT_PUBLIC_API}/api/employee/get-employee/${employeeId}`,
           {
-            headers: { accesstoken: token },
+            withCredentials: true,
           },
         );
 
@@ -240,23 +342,18 @@ export default function EmployeeDetailsPage() {
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           const message = err.response?.data?.message;
-          // إذا انتهى توكن الوصول وجربنا مرة واحدة فقط، نجدد ثم نعيد الطلب (مرة واحدة فقط)
           if (message === "access token expired" && retry) {
             try {
-              const refresh = await axios.post(
+              await axios.post(
                 `${process.env.NEXT_PUBLIC_API}/api/auth/refresh-token`,
-                {
-                  refreshToken: localStorage.getItem("refreshToken"),
-                },
+                {},
+                { withCredentials: true },
               );
-              const newToken = refresh.data.accessToken;
-              localStorage.setItem("accessToken", newToken);
 
-              // بعد التجديد نعيد الطلب مرة واحدة مع التوكن الجديد
               const retryResp = await axios.get<{ employee: Employee }>(
                 `${process.env.NEXT_PUBLIC_API}/api/employee/get-employee/${employeeId}`,
                 {
-                  headers: { accesstoken: newToken },
+                  withCredentials: true,
                 },
               );
               if (!cancelled) {
@@ -328,8 +425,10 @@ export default function EmployeeDetailsPage() {
   const contacts = employee.Contacts || {};
   const account = employee.Account || {};
 
-  // الحصول على الحرف الأول للصورة الرمزية
-  const initial = personal.FullName?.charAt(0) || "?";
+  const hasPhoto = personal.PersonalPhoto;
+  const photoUrl = hasPhoto
+    ? `${process.env.NEXT_PUBLIC_API}/${personal.PersonalPhoto}`
+    : null;
 
   return (
     <>
@@ -345,13 +444,22 @@ export default function EmployeeDetailsPage() {
               <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
               ملف الموظف
             </h1>
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-xl shadow-sm hover:shadow-md"
-            >
-              <FaArrowLeft />
-              <span>العودة</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push(`/employees/${employeeId}/edit`)}
+                className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 transition-colors px-4 py-2 rounded-xl shadow-sm"
+              >
+                <FaEdit />
+                <span>تعديل</span>
+              </button>
+              <button
+                onClick={() => router.back()}
+                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-xl shadow-sm hover:shadow-md"
+              >
+                <FaArrowLeft />
+                <span>العودة</span>
+              </button>
+            </div>
           </div>
 
           {/* الهيدر الشخصي */}
@@ -359,9 +467,20 @@ export default function EmployeeDetailsPage() {
             <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100 rounded-full -translate-x-1/2 -translate-y-1/2 opacity-20"></div>
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-100 rounded-full translate-x-1/2 translate-y-1/2 opacity-20"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
-              <div className="w-28 h-28 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-200">
-                {initial}
-              </div>
+              {photoUrl ? (
+                <Image
+                  src={photoUrl}
+                  alt="error"
+                  width={112}
+                  height={112}
+                  className="w-28 h-28 rounded-full object-cover shadow-lg shadow-blue-200"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-200">
+                  {personal.FullName?.charAt(0) || "?"}
+                </div>
+              )}
               <div className="text-center md:text-right">
                 <h2 className="text-3xl font-bold text-gray-800">
                   {personal.FullName}
@@ -451,6 +570,11 @@ export default function EmployeeDetailsPage() {
                 value={formatDate(job.HiringDate)}
               />
               <DataRow icon={FaUserTie} label="الدور" value={job.role} />
+              <DataRow
+                icon={FaShieldAlt}
+                label="التأمين"
+                value={job.isInsured ? "مؤمن" : "غير مؤمن"}
+              />
               {job.DirectManagers && job.DirectManagers.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500 mb-2">
@@ -591,6 +715,7 @@ export default function EmployeeDetailsPage() {
                 label="الراتب"
                 value={accounts.Salary ? `${accounts.Salary} ج.م` : undefined}
               />
+              <DocumentList documents={accounts.Documents} />
             </InfoCard>
 
             {/* جهة اتصال الطوارئ */}

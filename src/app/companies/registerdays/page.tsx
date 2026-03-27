@@ -488,11 +488,6 @@ function CompanyRegister({
     setPopup(null);
   };
 
-  const removeDriver = (driverIndex: number) => {
-    if (disabled) return;
-    setDrivers((prev) => prev.filter((_, i) => i !== driverIndex));
-  };
-
   // حساب الإجماليات
   const grandTotals = useMemo(() => {
     let totalDays = 0;
@@ -568,9 +563,6 @@ function CompanyRegister({
               })}
               <th className="border border-gray-200 p-3 bg-gray-100 text-gray-700 font-semibold text-sm">
                 إجمالي السائق
-              </th>
-              <th className="border border-gray-200 p-3 bg-gray-100 text-gray-700 font-semibold text-sm">
-                حذف
               </th>
             </tr>
           </thead>
@@ -817,18 +809,6 @@ function CompanyRegister({
                       <div>أيام: {driverTotals.totalDays}</div>
                       <div>صافي: {driverTotals.totalMoney} ج</div>
                     </div>
-                  </td>
-
-                  <td className="border border-gray-200 p-2 align-top bg-white">
-                    <button
-                      onClick={() => removeDriver(driverIndex)}
-                      disabled={disabled}
-                      className={`border-none bg-red-500 text-white px-3 py-1 rounded text-xs font-medium ${
-                        disabled ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      حذف
-                    </button>
                   </td>
                 </tr>
               );
@@ -1128,7 +1108,9 @@ export default function RegisterDays() {
               <details
                 key={company._id}
                 className={`rounded-xl shadow-sm border border-gray-200 open:shadow-lg transition-all ${
-                  company.isActive ? "bg-white" : "bg-red-100 border-red-300 hover:bg-red-200"
+                  company.isActive
+                    ? "bg-white"
+                    : "bg-red-100 border-red-300 hover:bg-red-200"
                 }`}
               >
                 <summary className="flex items-center justify-between p-5 cursor-pointer list-none">

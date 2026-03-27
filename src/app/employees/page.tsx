@@ -64,26 +64,26 @@ export default function Employees() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("accessToken") ?? "";
-
         const response = await axios.get<{ employees: Employee[] }>(
           `${process.env.NEXT_PUBLIC_API}/api/employee/get-employees`,
           {
-            headers: { accesstoken: token },
-          }
+            withCredentials: true,
+          },
         );
         console.log(response.data?.employees);
         setEmployees(
-          Array.isArray(response.data?.employees) ? response.data.employees : []
+          Array.isArray(response.data?.employees)
+            ? response.data.employees
+            : [],
         );
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           if (err.response?.data?.message === "access token expired") {
-            const refresh = await axios.post(
+            await axios.post(
               `${process.env.NEXT_PUBLIC_API}/api/auth/refresh-token`,
-              { refreshToken: localStorage.getItem("refreshToken") }
+              {},
+              { withCredentials: true },
             );
-            localStorage.setItem("accessToken", refresh.data.accessToken);
             fetchEmployees(); // إعادة المحاولة
           } else {
             console.error(err);
@@ -115,8 +115,10 @@ export default function Employees() {
     if (search) {
       result = result.filter((emp: Employee) => {
         const code = `${emp?.JobInformation?.EmployeeCode ?? ""}`.toLowerCase();
-        const name = `${emp?.PersonalInformation?.FullName ?? ""}`.toLowerCase();
-        const nationalId = `${emp?.PersonalInformation?.NationalIDNumber ?? ""}`.toLowerCase();
+        const name =
+          `${emp?.PersonalInformation?.FullName ?? ""}`.toLowerCase();
+        const nationalId =
+          `${emp?.PersonalInformation?.NationalIDNumber ?? ""}`.toLowerCase();
         return (
           code.includes(search) ||
           name.includes(search) ||
@@ -128,7 +130,7 @@ export default function Employees() {
     if (filters.department) {
       const dept = filters.department.toLowerCase();
       result = result.filter((emp: Employee) =>
-        `${emp?.JobInformation?.Department ?? ""}`.toLowerCase().includes(dept)
+        `${emp?.JobInformation?.Department ?? ""}`.toLowerCase().includes(dept),
       );
     }
 
@@ -137,7 +139,7 @@ export default function Employees() {
       result = result.filter((emp: Employee) =>
         `${emp?.JobInformation?.EmploymentStatus ?? ""}`
           .toLowerCase()
-          .includes(status)
+          .includes(status),
       );
     }
 
@@ -146,7 +148,7 @@ export default function Employees() {
 
   // معالجة تغيير الفلاتر
   const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name as keyof Filters]: value }));
@@ -168,7 +170,10 @@ export default function Employees() {
 
   // مفتاح فريد لكل موظف (للاستخدام في القوائم)
   const getEmployeeKey = (emp: Employee, index: number): string =>
-    emp?._id ?? emp?.JobInformation?.EmployeeCode ?? emp?.PersonalInformation?.NationalIDNumber ?? String(index);
+    emp?._id ??
+    emp?.JobInformation?.EmployeeCode ??
+    emp?.PersonalInformation?.NationalIDNumber ??
+    String(index);
 
   // إحصائيات سريعة
   const employeeStats = useMemo(() => {
@@ -181,14 +186,14 @@ export default function Employees() {
           .includes("active") ||
         `${emp?.JobInformation?.EmploymentStatus ?? ""}`
           .toLowerCase()
-          .includes("مفعل")
+          .includes("مفعل"),
     ).length;
     const managers = employees.filter(
       (emp) =>
         `${emp?.JobInformation?.JobTitle ?? ""}`
           .toLowerCase()
           .includes("manager") ||
-        `${emp?.JobInformation?.JobTitle ?? ""}`.toLowerCase().includes("مدير")
+        `${emp?.JobInformation?.JobTitle ?? ""}`.toLowerCase().includes("مدير"),
     ).length;
     return { total, active, managers };
   }, [employees]);
