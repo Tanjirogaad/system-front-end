@@ -218,6 +218,9 @@ function CompanyRegister({
       try {
         const res = await axios.get(
           `${API_BASE}/api/lines/get-lines?companyId=${companyId}`,
+          {
+            withCredentials: true,
+          },
         );
         setLines(res.data.lines || []);
       } catch (error) {
@@ -234,6 +237,9 @@ function CompanyRegister({
       try {
         const res = await axios.get(
           `${API_BASE}/api/driver-assignments/get-assignments`,
+          {
+            withCredentials: true,
+          },
         );
         const allAssignments = res.data.assignments || [];
         // فلترة التعيينات التي تنتمي إلى خطوط هذه الشركة
@@ -280,6 +286,7 @@ function CompanyRegister({
     try {
       const res = await axios.get(`${API_BASE}/api/attendance/get-attendance`, {
         params: { companyId, month, year },
+        withCredentials: true,
       });
       const saved = res.data.attendance;
       if (saved && saved.driversAttendance) {
@@ -336,12 +343,18 @@ function CompanyRegister({
         driverId: driver._id,
         daysData: driver.daysDataMap[makeKey(year, month)] || [],
       }));
-      await axios.post(`${API_BASE}/api/attendance/save-attendance`, {
-        companyId,
-        month,
-        year,
-        driversAttendance,
-      });
+      await axios.post(
+        `${API_BASE}/api/attendance/save-attendance`,
+        {
+          companyId,
+          month,
+          year,
+          driversAttendance,
+        },
+        {
+          withCredentials: true,
+        },
+      );
     } catch (error) {
       console.error("Failed to save", error);
     } finally {
@@ -974,6 +987,7 @@ export default function RegisterDays() {
         const url = `${API_BASE}/api/companies/get-companies`;
         const response = await axios.get<{ companies: Company[] }>(url, {
           signal: controller.signal,
+          withCredentials: true,
         });
         setCompanies(response.data.companies || []);
       } catch (error: unknown) {

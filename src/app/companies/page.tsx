@@ -12,6 +12,7 @@ type Company = {
   NameEN: string;
   Customercode: string;
   TaxRegistration: string;
+  isActive: boolean;
 };
 
 export default function Companies() {
@@ -29,6 +30,9 @@ export default function Companies() {
       setLoading(true);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API}/api/companies/get-companies`,
+        {
+          withCredentials: true,
+        },
       );
       setCompanies(res.data.companies || []);
     } catch (err: unknown) {

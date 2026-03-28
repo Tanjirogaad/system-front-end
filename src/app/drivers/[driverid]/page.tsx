@@ -46,6 +46,9 @@ export default function DriverDetailsPage() {
         setLoading(true);
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API}/api/driver/get-driver/${driverid}`,
+          {
+            withCredentials: true,
+          },
         );
         setDriver(res.data.driver);
         setError(null);

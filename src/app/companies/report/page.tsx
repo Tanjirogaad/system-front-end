@@ -6,6 +6,8 @@ import { FaChartBar } from "react-icons/fa";
 import Navbar from "@/app/components/Navbar";
 import Loading from "@/app/components/Loading";
 
+const API_BASE = process.env.NEXT_PUBLIC_API || "";
+
 interface Company {
   _id: string;
   Name: string;
@@ -22,8 +24,6 @@ interface LineReport {
 }
 
 export default function CompanyReportPage() {
-  const API_BASE = process.env.NEXT_PUBLIC_API || "";
-
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<number>(
@@ -37,24 +37,27 @@ export default function CompanyReportPage() {
   const [prices, setPrices] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/api/companies/get-companies`, {
+          withCredentials: true,
+        });
+
+        const comps: Company[] = res.data.companies || [];
+        setCompanies(comps);
+
+        setSelectedCompanyId((prev) => prev || comps[0]?._id || "");
+      } catch (error) {
+        console.error("Failed to fetch companies", error);
+      }
+    };
+
     fetchCompanies();
   }, []);
 
-  const fetchCompanies = async () => {
-    try {
-      const res = await axios.get(`${API_BASE}/api/companies/get-companies`);
-      const comps: Company[] = res.data.companies || [];
-      setCompanies(comps);
-      if (comps.length > 0 && !selectedCompanyId) {
-        setSelectedCompanyId(comps[0]._id);
-      }
-    } catch (error) {
-      console.error("Failed to fetch companies", error);
-    }
-  };
-
   const fetchReport = async () => {
     if (!selectedCompanyId) return;
+
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE}/api/reports/company-report`, {
@@ -63,6 +66,7 @@ export default function CompanyReportPage() {
           month: selectedMonth,
           year: selectedYear,
         },
+        withCredentials: true,
       });
 
       const rpt: LineReport[] = res.data.report || [];
@@ -108,7 +112,6 @@ export default function CompanyReportPage() {
     return Number.isNaN(n) ? 0 : n;
   };
 
-  // حساب الإجمالي لكل صف مع تضمين الإضافات والسهر وخصم الخصومات فقط
   const computeRowTotal = (item: LineReport, price: number) => {
     return (
       item.totalShifts * price +
@@ -118,13 +121,14 @@ export default function CompanyReportPage() {
     );
   };
 
-  // الإجمالي الكلي
   const grandTotal = report.reduce((acc, item, idx) => {
     const rowKey = `${item.lineId}-${idx}`;
     const price = getPriceNumber(rowKey);
     return acc + computeRowTotal(item, price);
   }, 0);
+
   if (loading) return <Loading />;
+
   return (
     <>
       <Navbar />
@@ -161,7 +165,9 @@ export default function CompanyReportPage() {
                 </label>
                 <select
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedMonth(parseInt(e.target.value, 10))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -178,7 +184,9 @@ export default function CompanyReportPage() {
                 </label>
                 <select
                   value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedYear(parseInt(e.target.value, 10))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   {years.map((y) => (
@@ -234,6 +242,7 @@ export default function CompanyReportPage() {
                     </th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-gray-200">
                   {report.length > 0 ? (
                     report.map((item, index) => {
