@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 interface Employee {
   PersonalInformation?: {
     FullName?: string;
+    PersonalPhoto?: string; // <-- تمت الإضافة
   };
   JobInformation?: {
     EmployeeCode?: string;
@@ -37,8 +39,12 @@ export default function EmployeeListItem({
   const jobTitle = employee.JobInformation?.JobTitle || "غير محدد";
   const status = employee.JobInformation?.EmploymentStatus || "غير محدد";
   const hiringDateRaw = employee.JobInformation?.HiringDate;
-
   const phones = employee.Address?.PhoneNumbers || [];
+  const personalPhoto = employee.PersonalInformation?.PersonalPhoto;
+
+  const photoUrl = personalPhoto
+    ? `${process.env.NEXT_PUBLIC_API}/${personalPhoto}`
+    : null;
 
   const statusKey = (status || "").toLowerCase();
 
@@ -135,11 +141,24 @@ export default function EmployeeListItem({
       {/* الاسم + أفاتار */}
       <td className="py-3 px-4 align-top min-w-[160px]">
         <div className="flex items-center gap-3 rtl:gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-linear-to-br from-blue-50 to-blue-100">
-            <span className="font-semibold text-blue-600 text-sm">
-              {initials(name)}
-            </span>
-          </div>
+          {photoUrl ? (
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+              <Image
+                src={photoUrl}
+                alt={name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-linear-to-br from-blue-50 to-blue-100">
+              <span className="font-semibold text-blue-600 text-sm">
+                {initials(name)}
+              </span>
+            </div>
+          )}
           <div className="min-w-0">
             <p
               className="font-semibold text-gray-800 truncate"

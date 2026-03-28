@@ -54,6 +54,9 @@ export default function CompanyDetailsPage() {
         setLoading(true);
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API}/api/companies/get-company/${companyid}`,
+          {
+            withCredentials: true,
+          },
         );
         setCompany(res.data.company);
         setError(null);

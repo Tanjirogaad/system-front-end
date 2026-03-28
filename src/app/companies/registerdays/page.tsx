@@ -218,6 +218,9 @@ function CompanyRegister({
       try {
         const res = await axios.get(
           `${API_BASE}/api/lines/get-lines?companyId=${companyId}`,
+          {
+            withCredentials: true,
+          },
         );
         setLines(res.data.lines || []);
       } catch (error) {
@@ -234,6 +237,9 @@ function CompanyRegister({
       try {
         const res = await axios.get(
           `${API_BASE}/api/driver-assignments/get-assignments`,
+          {
+            withCredentials: true,
+          },
         );
         const allAssignments = res.data.assignments || [];
         // فلترة التعيينات التي تنتمي إلى خطوط هذه الشركة
@@ -280,6 +286,7 @@ function CompanyRegister({
     try {
       const res = await axios.get(`${API_BASE}/api/attendance/get-attendance`, {
         params: { companyId, month, year },
+        withCredentials: true,
       });
       const saved = res.data.attendance;
       if (saved && saved.driversAttendance) {
@@ -336,12 +343,18 @@ function CompanyRegister({
         driverId: driver._id,
         daysData: driver.daysDataMap[makeKey(year, month)] || [],
       }));
-      await axios.post(`${API_BASE}/api/attendance/save-attendance`, {
-        companyId,
-        month,
-        year,
-        driversAttendance,
-      });
+      await axios.post(
+        `${API_BASE}/api/attendance/save-attendance`,
+        {
+          companyId,
+          month,
+          year,
+          driversAttendance,
+        },
+        {
+          withCredentials: true,
+        },
+      );
     } catch (error) {
       console.error("Failed to save", error);
     } finally {
@@ -488,11 +501,6 @@ function CompanyRegister({
     setPopup(null);
   };
 
-  const removeDriver = (driverIndex: number) => {
-    if (disabled) return;
-    setDrivers((prev) => prev.filter((_, i) => i !== driverIndex));
-  };
-
   // حساب الإجماليات
   const grandTotals = useMemo(() => {
     let totalDays = 0;
@@ -568,9 +576,6 @@ function CompanyRegister({
               })}
               <th className="border border-gray-200 p-3 bg-gray-100 text-gray-700 font-semibold text-sm">
                 إجمالي السائق
-              </th>
-              <th className="border border-gray-200 p-3 bg-gray-100 text-gray-700 font-semibold text-sm">
-                حذف
               </th>
             </tr>
           </thead>
@@ -818,18 +823,6 @@ function CompanyRegister({
                       <div>صافي: {driverTotals.totalMoney} ج</div>
                     </div>
                   </td>
-
-                  <td className="border border-gray-200 p-2 align-top bg-white">
-                    <button
-                      onClick={() => removeDriver(driverIndex)}
-                      disabled={disabled}
-                      className={`border-none bg-red-500 text-white px-3 py-1 rounded text-xs font-medium ${
-                        disabled ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      حذف
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -994,6 +987,7 @@ export default function RegisterDays() {
         const url = `${API_BASE}/api/companies/get-companies`;
         const response = await axios.get<{ companies: Company[] }>(url, {
           signal: controller.signal,
+          withCredentials: true,
         });
         setCompanies(response.data.companies || []);
       } catch (error: unknown) {
@@ -1128,7 +1122,9 @@ export default function RegisterDays() {
               <details
                 key={company._id}
                 className={`rounded-xl shadow-sm border border-gray-200 open:shadow-lg transition-all ${
-                  company.isActive ? "bg-white" : "bg-red-100 border-red-300 hover:bg-red-200"
+                  company.isActive
+                    ? "bg-white"
+                    : "bg-red-100 border-red-300 hover:bg-red-200"
                 }`}
               >
                 <summary className="flex items-center justify-between p-5 cursor-pointer list-none">

@@ -6,6 +6,8 @@ import { FaChartBar } from "react-icons/fa";
 import Navbar from "@/app/components/Navbar";
 import Loading from "@/app/components/Loading";
 
+const API_BASE = process.env.NEXT_PUBLIC_API || "";
+
 interface Driver {
   _id: string;
   name: string;
@@ -24,8 +26,6 @@ interface DriverReportItem {
 }
 
 export default function DriverReportPage() {
-  const API_BASE = process.env.NEXT_PUBLIC_API || "";
-
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<number>(
@@ -41,7 +41,9 @@ export default function DriverReportPage() {
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/api/driver/get-drivers`);
+        const res = await axios.get(`${API_BASE}/api/driver/get-drivers`, {
+          withCredentials: true,
+        });
         setDrivers(res.data.drivers || []);
       } catch (error) {
         console.error("Failed to fetch drivers", error);
@@ -62,6 +64,7 @@ export default function DriverReportPage() {
           month: selectedMonth,
           year: selectedYear,
         },
+        withCredentials: true,
       });
 
       const data: DriverReportItem[] = res.data.report || [];
@@ -118,7 +121,9 @@ export default function DriverReportPage() {
     const price = parsePrice(prices[rowKey] ?? "");
     return acc + computeRowTotal(item, price);
   }, 0);
+
   if (loading) return <Loading />;
+
   return (
     <>
       <Navbar />

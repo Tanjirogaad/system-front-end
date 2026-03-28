@@ -29,6 +29,9 @@ export default function Drivers() {
       setLoading(true);
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API}/api/driver/get-drivers`,
+        {
+          withCredentials: true,
+        },
       );
       setDrivers(res.data.drivers || []);
       setError(null);
@@ -107,7 +110,7 @@ export default function Drivers() {
                   />
                 </div>
               </div>
-              
+
               {filteredDrivers.length === 0 ? (
                 <div className="text-center py-12">
                   <FaFileAlt className="w-16 h-16 text-gray-300 mx-auto mb-4" />

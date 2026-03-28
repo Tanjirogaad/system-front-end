@@ -45,6 +45,9 @@ export default function EditDriverPage() {
         setLoading(true);
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API}/api/driver/get-driver/${driverid}`,
+          {
+            withCredentials: true,
+          },
         );
         const driver = res.data.driver;
         setFormData({

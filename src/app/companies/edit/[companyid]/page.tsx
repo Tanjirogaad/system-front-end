@@ -63,6 +63,9 @@ export default function EditCompanyPage() {
         setLoading(true);
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_API}/api/companies/get-company/${companyid}`,
+          {
+            withCredentials: true,
+          },
         );
         const company = res.data.company;
         setFormData({
@@ -191,6 +194,9 @@ export default function EditCompanyPage() {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API}/api/companies/edit-company/${companyid}`,
         formData,
+        {
+          withCredentials: true,
+        },
       );
       setSuccess("تم تحديث البيانات بنجاح");
       setTimeout(() => {
@@ -388,7 +394,7 @@ export default function EditCompanyPage() {
                       className="absolute text-lg top-[-10] right-[-15] text-red-500 hover:text-red-700"
                       aria-label="حذف الموظف"
                     >
-                      <FaTrash /> 
+                      <FaTrash />
                     </button>
 
                     <div className="space-y-3">

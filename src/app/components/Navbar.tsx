@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { IoLogOut, IoClose, IoMenu } from "react-icons/io5";
 import {
-  FaBookReader,
   FaBuilding,
   FaCarSide,
   FaRegCalendarAlt,
@@ -19,6 +18,24 @@ export default function Navbar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
   const [showMobileMenu, setShowMobileMenu] = useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
+  const [role, setRole] = useState<string>("");
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API}/api/employee/get-role`,
+          {
+            withCredentials: true,
+          },
+        );
+        setRole(response.data.role);
+      } catch (error) {
+        console.error("Error fetching role:", error);
+      }
+    };
+    fetchRole();
+  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -56,7 +73,6 @@ export default function Navbar() {
           >
             {showMobileMenu ? <IoClose size={20} /> : <IoMenu size={20} />}
           </button>
-
           {/* رابط /employees/drivers (يظهر في جميع الأحجام) */}
           <Link
             href="/employee"
@@ -65,47 +81,52 @@ export default function Navbar() {
             <FaUser aria-hidden />
             <span className="hidden sm:inline">الملف الشخصي</span>
           </Link>
-          <Link
-            href="/employees"
-            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
-          >
-            <FaUsers aria-hidden />
-            <span className="hidden sm:inline">الموظفين</span>
-          </Link>
-          <Link
-            href="/drivers"
-            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
-          >
-            <FaCarSide aria-hidden />
-            <span className="hidden sm:inline">الموردين</span>
-          </Link>
-          <Link
-            href="/companies"
-            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
-          >
-            <FaBuilding aria-hidden />
-            <span className="hidden sm:inline">العملاء</span>
-          </Link>
+          {role === "admin" && (
+            <>
+              <Link
+                href="/employees"
+                className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+              >
+                <FaUsers aria-hidden />
+                <span className="hidden sm:inline">الموظفين</span>
+              </Link>
+              <Link
+                href="/drivers"
+                className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+              >
+                <FaCarSide aria-hidden />
+                <span className="hidden sm:inline">الموردين</span>
+              </Link>
+              <Link
+                href="/companies"
+                className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+              >
+                <FaBuilding aria-hidden />
+                <span className="hidden sm:inline">العملاء</span>
+              </Link>
+              <Link
+                href="/drivers/report"
+                className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+              >
+                <FaCarSide aria-hidden />
+                <span className="hidden sm:inline">تقرير المورد</span>
+              </Link>
+              <Link
+                href="/companies/report"
+                className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
+              >
+                <FaBuilding aria-hidden />
+                <span className="hidden sm:inline">تقرير العميل</span>
+              </Link>
+            </>
+          )}
+
           <Link
             href="/companies/registerdays"
             className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
           >
             <FaRegCalendarAlt aria-hidden />
             <span className="hidden sm:inline">ايام التسجيل</span>
-          </Link>
-          <Link
-            href="/drivers/report"
-            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
-          >
-            <FaCarSide aria-hidden />
-            <span className="hidden sm:inline">تقرير المورد</span>
-          </Link>
-          <Link
-            href="/companies/report"
-            className="px-2 sm:px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 flex items-center gap-2 shrink-0"
-          >
-            <FaBuilding aria-hidden />
-            <span className="hidden sm:inline">تقرير العميل</span>
           </Link>
         </div>
 
@@ -161,30 +182,34 @@ export default function Navbar() {
                 <span>الملف الشخصي</span>
                 <FaUser aria-hidden />
               </Link>
-              <Link
-                href="/rules"
-                className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <span>سياسة الشركة</span>
-                <FaBookReader aria-hidden />
-              </Link>
-              <Link
-                href="/drivers"
-                className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <span>السائقين</span>
-                <FaCarSide aria-hidden />
-              </Link>
-              <Link
-                href="/companies"
-                className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <span>الشركات</span>
-                <FaBuilding aria-hidden />
-              </Link>
+              {role === "admin" && (
+                <>
+                  <Link
+                    href="/employees"
+                    className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <span>الموظفين</span>
+                    <FaUsers aria-hidden />
+                  </Link>
+                  <Link
+                    href="/drivers"
+                    className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <span>الموردين</span>
+                    <FaCarSide aria-hidden />
+                  </Link>
+                  <Link
+                    href="/companies"
+                    className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    onClick={() => setShowMobileMenu(false)}
+                  >
+                    <span>العملاء</span>
+                    <FaBuilding aria-hidden />
+                  </Link>
+                </>
+              )}
               <Link
                 href="/companies/registerdays"
                 className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
@@ -193,14 +218,7 @@ export default function Navbar() {
                 <span>ايام التسجيل</span>
                 <FaRegCalendarAlt aria-hidden />
               </Link>
-              <Link
-                href="/employees"
-                className="flex items-center justify-between p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                <span>الموظفين</span>
-                <FaUsers aria-hidden />
-              </Link>
+
               <hr className="my-3 border-gray-200 dark:border-gray-700" />
 
               {/* زر تسجيل الخروج في القائمة الجانبية */}
